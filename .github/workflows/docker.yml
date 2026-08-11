@@ -1,4 +1,4 @@
-name: Build and Publish Docker Image
+name: Build, Scan and Publish Docker Image
 
 on:
   push:
@@ -10,7 +10,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-push:
+  build-scan-push:
     runs-on: ubuntu-latest
 
     permissions:
@@ -28,7 +28,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: ue19-lab-05:latest
+
+      - name: Scan Docker image with Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ue19-lab-05:latest
+          format: table
+          severity: HIGH,CRITICAL
+          exit-code: '0'
+
+      - name: Push Docker image
         uses: docker/build-push-action@v7
         with:
           context: .
